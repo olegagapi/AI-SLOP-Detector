@@ -1,6 +1,6 @@
 # AI-SLOP Detector - Pattern Catalog
 
-**Last updated:** 2026-11-15 (for 3.16.1). The Quick Reference table below is checked
+**Last updated:** 2026-11-26 (Swift and Kotlin, unreleased). The Quick Reference table below is checked
 against the analyzers by a test, so it is current for the code it ships with.
 
 Complete reference of all anti-patterns detected by AI-SLOP Detector.

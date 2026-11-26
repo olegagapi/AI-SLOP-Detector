@@ -63,6 +63,10 @@ what it leaves alone: [docs/PATTERNS.md](docs/PATTERNS.md#swift).
   findings list and the review targets include JS/TS, Go, Rust, Swift and
   Kotlin files; they held Python files only. The verdict is unchanged: the
   gate already judged every language.
+- Work-order ruleset 2.1.1 (was 2.1.0): its auditor limit says the locators of
+  JS/TS, Go, Rust, Swift and Kotlin items are lines (it named JS/TS and Go
+  only). The `ruleset:` line of every AI work order shows the new version and
+  digest; no other rule changes.
 
 ### What does not change
 

@@ -58,14 +58,15 @@ Every report reads one `ReportView` (`report_view.py`) built once from the resul
 - `ai_report.py`: the AI report `ai-slop-report/1`, pydantic-validated records with ids from `finding_identity.py` (symbol, subject, line fingerprint, structural locator) and the scan-time SHA-256 of each file.
 - `ai_report_md.py`: the same records as the AI work order, its rule texts from `config/work_order_rules.json` (loaded and digested by `work_order_rules.py`). See [AI_WORK_ORDER.md](AI_WORK_ORDER.md).
 - `report_bundle.py`: `--report-dir`.
+- `renderer_diagnostics.py`: `--format xcode` (compiler diagnostic lines for an Xcode build phase) and `--format github` (pull request annotations), one line per finding of every language.
 
 What each surface shows: [REPORTS.md](REPORTS.md).
 
 ## Source Scope
 
-The project scanner recognizes Python, JavaScript, TypeScript, and Go. It distinguishes analyzed files from intentionally excluded supported files and known unsupported source files. Build products and dependency trees such as `build`, `dist`, `.tox`, `node_modules`, and `.next` are excluded by default.
+The project scanner recognizes Python, JavaScript, TypeScript, Go, Rust, Swift and Kotlin. It distinguishes analyzed files from intentionally excluded supported files and known unsupported source files. Build products and dependency trees such as `build`, `dist`, `.tox`, `node_modules`, and `.next` are excluded by default; a language adapter adds its own (`language_registry.LanguageSpec.extra_ignore`: Cargo's `target/`, CocoaPods, Carthage, SwiftPM's `.build/`, Xcode's `DerivedData/`, generated Swift) and its test sources (`test_ignore`: Xcode test targets, Gradle test source sets), skipped while the run excludes tests.
 
-Language support is not a claim of equivalent analysis depth. Python supplies the core metric and pattern path; JS/TS, Go, Rust, Swift and Kotlin use language analyzers and are included in the project contract. Inspect `scan_coverage` and language-specific result arrays before treating a project result as complete scope.
+Language support is not a claim of equivalent analysis depth. Python supplies the core metric and pattern path; JS/TS, Go, Rust, Swift and Kotlin use language analyzers and are included in the project contract. Swift and Kotlin share one token scanner (`languages/token_scan.py`) and rule helpers (`languages/token_rules.py`). Inspect `scan_coverage` and language-specific result arrays before treating a project result as complete scope.
 
 ## Deterministic Scoring
 

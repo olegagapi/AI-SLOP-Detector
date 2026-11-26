@@ -57,6 +57,25 @@ architecture:
 `architecture` is opt-in. If you do nothing, `boundary-violations` reports
 import cycles only.
 
+### Ignore lists and the built-in language exclusions
+
+- An `ignore` list replaces the built-in list, it is not added to it: keep
+  the defaults you still want (`tests/**`, `**/.venv/**`, ...).
+- Each language adapter skips its own build output and dependencies whatever
+  the list says: Cargo's `target/` for Rust; `Pods/`, `Carthage/`, `.build/`,
+  `DerivedData/`, `SourcePackages/`, `*.docc/` and generated files for Swift.
+  Default-excluded directories (`build`, `dist`, `node_modules`, ...) are
+  skipped for every language.
+- Swift and Kotlin test sources (Xcode test targets, Gradle test source sets
+  and test-support modules) are skipped only while the list keeps a built-in
+  test pattern (`tests/**`, `**/test_*.py` or `**/*_test.py`): a list without
+  one analyzes them, as `--include-tests` does. Patterns:
+  [MOBILE.md](MOBILE.md#what-a-scan-reads).
+- `patterns.disabled` and `--disable` name Python rules. A Swift, Kotlin,
+  JS/TS, Go or Rust rule id in `patterns.disabled` has no effect (the finding
+  is still reported); `--disable` with one stops with exit code 2. Exclude the
+  files with `ignore` instead.
+
 ## Config Validation
 
 The config is validated before any analysis, and a config that cannot be

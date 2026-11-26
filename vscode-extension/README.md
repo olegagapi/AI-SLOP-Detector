@@ -141,6 +141,7 @@ pip install ai-slop-detector          # core
 pip install "ai-slop-detector[js]"    # + JS/TS tree-sitter patterns (Python 3.10+)
 pip install "ai-slop-detector[go]"    # tree-sitter-go (Python 3.10+); Go is read by regex either way
 pip install "ai-slop-detector[rust]"  # + Rust tree-sitter parsing (Python 3.10+)
+# Swift (.swift) and Kotlin (.kt, .kts) need no extra
 pip install "ai-slop-detector[full]"  # JS/TS extra + REST API dependencies (Python 3.10+)
 ```
 

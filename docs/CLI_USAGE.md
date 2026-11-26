@@ -28,8 +28,8 @@ slop-detector verify-governance <project-or-record>
 Compatible forms remain available: `slop-detector <path>`, `slop-detector --project <directory>`, `audit`, `health`, and direct cleanup family commands. New automation should prefer the canonical forms above.
 
 A directory is scanned as a project. A single `.py` file is scanned as Python; a
-single `.js`, `.jsx`, `.ts`, `.tsx`, `.go` or `.rs` file is scanned in its own language
-(as a project of that one file).
+single `.js`, `.jsx`, `.ts`, `.tsx`, `.go`, `.rs`, `.swift`, `.kt` or `.kts` file is
+scanned in its own language (as a project of that one file).
 
 `--read-only` (also accepted as `--inspector-read-only`) changes nothing in the
 project or in the detector's state (history, impact, telemetry, analysis cache)

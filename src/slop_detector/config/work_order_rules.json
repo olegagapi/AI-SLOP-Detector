@@ -1,6 +1,6 @@
 {
   "schema": "ai-slop-work-order-rules/2",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "precedence": "HARD-STOP > INVARIANTS > ALLOWED > WORK-ORDER > BACKLOG",
   "tags": "[FACT] measured by the detector at the locator | [DERIVED] the detector's fix direction, advisory | [NORM] rule for the agent | [NULL] measured as nothing",
   "empty_values": "NOT-MEASURED | NOT-APPLICABLE: <why> | MISSING",
@@ -134,7 +134,7 @@
       "limits": [
         "an excerpt may not show the whole span; a 'not shown' line names the range to read",
         "the code shown is the content the scan analyzed; a VOID or MISSING item shows none",
-        "JS/TS and Go locators are lines: a line shift moves them",
+        "JS/TS, Go, Rust, Swift and Kotlin locators are lines: a line shift moves them",
         "a REVIEW_CANDIDATE is not a defect until verified; the score comes from the pattern channel only"
       ]
     },

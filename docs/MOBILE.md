@@ -203,9 +203,14 @@ python -c "from slop_detector.git_integration import GitIntegration; GitIntegrat
 
 ## Limits
 
-- Inline suppression comments (`slop-disable-next-line`) and `--disable`
-  apply to Python rules only. Swift and Kotlin findings are excluded by path
-  (`ignore`), or resolved.
+- Inline suppression comments (`slop-disable-next-line`), `--disable` and
+  `patterns.disabled` apply to Python rules only: a Swift or Kotlin rule id in
+  `patterns.disabled` has no effect, and `--disable` with one stops with exit
+  code 2. Swift and Kotlin findings are excluded by path (`ignore`), or resolved.
+- An `ignore` list in `.slopconfig.yaml` replaces the built-in list. Keep
+  `tests/**` in it: without a built-in test pattern the Xcode and Gradle test
+  directories are analyzed (the dependency and build-output exclusions apply
+  either way).
 - Rules read tokens, not types: `print(...)` is the standard library's unless
   the file declares a function, value or parameter named `print`; a call
   inside a string interpolation is not read.

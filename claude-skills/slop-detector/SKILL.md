@@ -28,6 +28,7 @@ pip install ai-slop-detector
 pip install "ai-slop-detector[js]"   # optional JS/TS tree-sitter parsing (Python 3.10+)
 pip install "ai-slop-detector[go]"   # installs tree-sitter-go (Python 3.10+); the Go analyzer does not use it yet
 pip install "ai-slop-detector[rust]" # optional Rust tree-sitter parsing (Python 3.10+; .rs files are scanned without it)
+# .swift, .kt and .kts files need no extra (iOS and Android set-up: docs/MOBILE.md)
 ```
 
 The CLI analyzes one JS/TS, Go, Rust, Swift or Kotlin file directly (`slop-detector scan lib.rs`).

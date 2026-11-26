@@ -98,6 +98,8 @@ slop-detector --project ./src             # entire project
 slop-detector --project . --include-tests # include only default-excluded test files
 slop-detector --project . --json --output slop.json   # machine-readable output (Windows-safe)
 slop-detector --project . --ci-mode hard --ci-report  # CI gate
+slop-detector --project . --format xcode --read-only  # Xcode build phase warnings (MOBILE.md)
+slop-detector --project . --format github --read-only # GitHub pull request annotations
 
 # Optional extras, Python 3.10+ (tree-sitter needs it). On 3.8/3.9 the [js] and [go]
 # commands fail to resolve and install nothing: install the base package, which
@@ -105,6 +107,7 @@ slop-detector --project . --ci-mode hard --ci-report  # CI gate
 pip install "ai-slop-detector[js]"       # JS/TS tree-sitter analysis
 pip install "ai-slop-detector[go]"       # installs tree-sitter-go; the Go analyzer does not use it yet
 pip install "ai-slop-detector[rust]"     # Rust tree-sitter analysis (installs nothing on 3.8/3.9)
+# Swift (.swift) and Kotlin (.kt, .kts) need no extra: the base install reads them.
 
 # npm wrapper (delegates to the Python CLI). With no Python backend installed
 # it runs the PyPI release of the same version through uvx or pipx.
@@ -316,6 +319,11 @@ dependency, and language-specific signals.** Full catalog:
 | **Cross-Language** | `js_push`, `java_equals`, `ruby_each`, `go_println`, `csharp_length`, `php_strlen` | Wrong-language syntax |
 | **Python Advanced** | `god_function`, `dead_code`, `deep_nesting`, `nested_complexity`, `lint_escape`, `exact_duplicate_pair`, `function_clone_cluster`, `placeholder_variable_naming` | Structural complexity + evasion |
 | **Phantom** | `phantom_import`, `phantom_member` | Hallucinated packages, and names an installed package does not define |
+
+The table holds the Python rules (the ids `--disable` accepts). JS/TS, Go,
+Rust, Swift and Kotlin have rules of their own (stubs such as `TODO()` and
+`fatalError("Not implemented")`, swallowed errors, debug leftovers, markers):
+every one, with what it leaves alone, is in [PATTERNS.md](PATTERNS.md).
 
 **Four metric axes per file:**
 

@@ -1,6 +1,6 @@
 # AI-SLOP Detector Roadmap
 
-> Last updated: 2026-10-11
+> Last updated: 2026-11-26
 
 This roadmap tracks the path that matters for `AI-SLOP-DETECTOR`.
 The goal is not feature parity theater. The goal is a cleaner, more governable,
@@ -232,6 +232,19 @@ evidence-backed design and parity program.
 This work is intentionally outside the v3.9.x stabilization scope. v3.9.x keeps
 the current verified fallback/parity model; the architectural acceleration work
 begins only after the release candidate is closed.
+
+### Swift and Kotlin follow-ups
+
+The adapters (unreleased, [MOBILE.md](docs/MOBILE.md)) leave these open:
+
+- Inline suppression and `patterns.disabled` / `--disable` for every
+  adapter rule (JS/TS, Go and Rust have none either), recorded in the
+  suppression ledger like a Python suppression.
+- Test targets read from `Package.swift` (`.testTarget`) instead of
+  directory names, so a production folder ending in `Tests` or `Mocks` is
+  analyzed.
+- A Gradle and an Xcode integration exercised in CI (the documented task and
+  build phase are not run by the test suite).
 
 ### Cleanup planner depth
 

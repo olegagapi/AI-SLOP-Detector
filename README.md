@@ -425,6 +425,12 @@ Use a linter for correctness-of-form. Use this for "is this code real, or just p
 
 ## Release Highlights
 
+**Unreleased**: Swift and Kotlin analysis for iOS and Android projects (10
+rules; Xcode, SwiftPM, CocoaPods and Gradle layouts), `--format xcode` for
+Xcode build phases and `--format github` for pull request annotations; the
+pre-commit hooks and the git hook run for every analyzed language.
+[docs/MOBILE.md](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/MOBILE.md).
+
 **v3.18.0**: Python import findings are judged by which distribution provides
 the import and where that evidence comes from: a declared `Pillow` is no
 longer reported as a missing `PIL`, a different installed distribution no

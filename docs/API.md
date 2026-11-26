@@ -70,8 +70,8 @@ Scans are read-only: no route writes the analysis cache, and only the
 `"save_history": true` (the default is `false`). The MCP tools are read-only
 as well.
 
-The file endpoints analyze Python source. A `.js`, `.jsx`, `.ts`, `.tsx`, `.go`
-or `.rs` file gets `400` with a message (analyze its folder with the project
+The file endpoints analyze Python source. A `.js`, `.jsx`, `.ts`, `.tsx`, `.go`,
+`.rs`, `.swift`, `.kt` or `.kts` file gets `400` with a message naming its language (analyze its folder with the project
 endpoints instead); a path that does not exist gets `404`. In Python,
 `SlopDetector.analyze_file` raises `UnsupportedLanguageError` (a `ValueError`)
 for those files, naming the language and the call that analyzes one such file:

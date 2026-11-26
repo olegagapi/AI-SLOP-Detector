@@ -162,6 +162,8 @@ most 5 findings and 3 review candidates, then what to do. Output for
 | `--report-dir DIR` | new, only when given: the bundle `report.md`, `report.html`, `report.pdf`, `ai-report.jsonl`, `ai-report.md`, `scan.json` |
 | `--format ai` | new: the AI report (JSON Lines) on stdout |
 | `--format ai-md` | new: the same records as one Markdown work order for an agent ([AI_WORK_ORDER.md](AI_WORK_ORDER.md)) |
+| `--format xcode` | unreleased: one `path:line:column: warning: message` line per finding and per failed file, for an Xcode build phase ([MOBILE.md](MOBILE.md)); a failed `--ci-mode` gate adds one `error:` line |
+| `--format github` | unreleased: the same as GitHub Actions annotations (`::error` / `::warning` / `::notice`), most severe first, paths relative to `$GITHUB_WORKSPACE` |
 
 - A plain `scan` writes no file, as today. `--read-only` keeps refusing file
   output.

@@ -40,7 +40,7 @@ make lint
 ## Priority Areas
 
 ### High Priority
-- [ ] JavaScript/TypeScript support
+- [x] JavaScript/TypeScript support
 - [ ] Better complexity metrics
 - [ ] ML-based detection
 
@@ -50,7 +50,8 @@ make lint
 - [ ] Auto-fix suggestions
 
 ### Low Priority
-- [ ] Java/Go support
+- [x] Go, Rust, Swift and Kotlin support ([docs/ADDING_A_LANGUAGE.md](docs/ADDING_A_LANGUAGE.md))
+- [ ] Java support
 - [ ] Web dashboard
 - [ ] Slack/Discord integration
 
