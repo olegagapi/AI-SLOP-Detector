@@ -18,6 +18,8 @@ Complete reference of all anti-patterns detected by AI-SLOP Detector.
 7. [JavaScript / TypeScript (v3.4.0)](#javascript--typescript)
 8. [Go (v3.5.0)](#go)
 9. [Rust (v3.16.1)](#rust)
+10. [Swift (unreleased)](#swift)
+11. [Kotlin (unreleased)](#kotlin)
 
 ---
 
@@ -25,7 +27,8 @@ Complete reference of all anti-patterns detected by AI-SLOP Detector.
 
 Every rule the detectors currently report. This table is the current-state contract:
 `tests/test_patterns_doc_consistency.py` checks it against the Python pattern registry,
-the ids the Python patterns emit, the JS/TS, Go and Rust analyzers, and the autofix registry.
+the ids the Python patterns emit, the JS/TS, Go, Rust, Swift and Kotlin analyzers, and the autofix
+registry.
 Severity shows the default first; other severities a rule can emit follow it.
 The detailed sections below explain the main rules and may not cover every id.
 
@@ -89,6 +92,16 @@ The detailed sections below explain the main rules and may not cover every id.
 | `rust_unimplemented_macro` | Rust | High | Rust | No | `unimplemented!()` call outside test code: panics when reached |
 | `rust_dbg_macro` | Rust | Medium | Rust | No | `dbg!()` debug print outside test code |
 | `rust_todo_comment` | Rust | Low | Rust | No | `TODO` / `FIXME` / `HACK` / `XXX` comment outside test code |
+| `swift_fatal_error_stub` | Swift | High | Swift | No | `fatalError()` / `preconditionFailure()` whose message says the code is not implemented: crashes when reached |
+| `swift_empty_catch` | Swift | Medium | Swift | No | `catch` block with no code: the error is discarded |
+| `swift_debug_print` | Swift | Medium | Swift | No | `print()` / `debugPrint()` / `dump()` outside `#if DEBUG` and command-line programs |
+| `swift_todo_comment` | Swift | Low | Swift | No | `TODO` / `FIXME` / `HACK` / `XXX` comment outside test code |
+| `kotlin_todo_call` | Kotlin | High | Kotlin | No | `TODO()` call: throws `NotImplementedError` when reached |
+| `kotlin_not_implemented` | Kotlin | High | Kotlin | No | `throw NotImplementedError()`, or an exception or `error()` whose message says not implemented |
+| `kotlin_empty_catch` | Kotlin | Medium | Kotlin | No | `catch` block with no code (a parameter named `_`, `ignored` or `expected` declares the discard) |
+| `kotlin_print_stack_trace` | Kotlin | Medium | Kotlin | No | `e.printStackTrace()`: the trace goes to standard error |
+| `kotlin_debug_print` | Kotlin | Medium | Kotlin | No | `println()` / `print()` / `System.out.println()` in Android or Compose code, outside `if (BuildConfig.DEBUG)` |
+| `kotlin_todo_comment` | Kotlin | Low | Kotlin | No | `TODO` / `FIXME` / `HACK` / `XXX` comment outside test code |
 <!-- ACTIVE_PATTERN_REGISTRY:END -->
 
 ---
@@ -1254,6 +1267,129 @@ pub fn parse(input: &str) -> Config {
 pub fn parse(input: &str) -> Result<Config, ParseError> {
     Err(ParseError::Unsupported)
 }
+```
+
+---
+
+## Swift
+
+*Added: unreleased - `.swift` files. A token scanner reads them on any install
+(no extra, Python 3.8+) and measures every rule; `scan_coverage.analysis_modes`
+reports it as `token_scanner`. iOS and macOS integration (Xcode build phase,
+CI): [MOBILE.md](MOBILE.md).*
+
+| ID | Severity | What it flags |
+|---|---|---|
+| `swift_fatal_error_stub` | HIGH | `fatalError("Not implemented")`, `preconditionFailure("TODO")`: a stub that crashes when reached |
+| `swift_empty_catch` | MEDIUM | `catch {}` or a `catch` block holding only a comment: the error is discarded |
+| `swift_debug_print` | MEDIUM | `print()`, `debugPrint()`, `dump()` left in the code |
+| `swift_todo_comment` | LOW | `TODO` / `FIXME` / `HACK` / `XXX` leading a comment line (reported, not scored) |
+
+A stub message says the code is not written: "not implemented", "not yet
+implemented", "has not been implemented", "unimplemented", "implement me", or
+`TODO` / `FIXME` in upper case. `fatalError()` with another message (an
+invariant, an unreachable branch) is not a stub.
+
+What is not reported:
+
+- a call inside a string, an interpolation, a comment or a regex literal (it is not a call);
+- test code: a file that imports XCTest, Testing, Quick, Nimble or
+  SnapshotTesting, or has an `@testable import`; such a file is analyzed and
+  counted (`test_code: true`) and reports nothing;
+- `fatalError` in an `init?(coder:)` body, and Xcode's fix-it message
+  `"init(...) has not been implemented"` in any initializer: the idiom for an
+  initializer a class does not support;
+- a print inside `#if DEBUG` (and `DEBUG && ...`, and the `#else` of
+  `#if !DEBUG`), which a release build does not contain;
+- a print in a command-line program, where it is the output: `main.swift` and
+  the files beside it, a script (`#!`), a file that imports `ArgumentParser`
+  or `PackagePlugin`;
+- a member call (`logger.print(...)`), an enum case named `print`, and a call
+  to a function, closure or parameter of the same name the file declares;
+- `catch _ {}` and `try?`: an explicit discard.
+
+Skipped for Swift files and listed as excluded in scan coverage (built-in, not
+custom rules): `.build/`, `DerivedData/`, `Pods/`, `Carthage/`,
+`SourcePackages/`, DocC catalogs (`*.docc/`), and generated files
+(`*.pb.swift`, `*.grpc.swift`, `*.generated.swift`, `*+Generated.swift`,
+`*.graphql.swift`). Test targets are skipped like the built-in test patterns
+(`--include-tests` analyzes them): `Tests/`, `*Tests/` (Xcode's `AppTests`,
+`AppUITests`), `*TestSupport/`, `*TestHelpers/`, `*TestUtilities/`,
+`*TestUtils/`, `*TestFixtures/`, `*Mocks/`. A production directory whose name
+ends in `Tests` or `Mocks` is skipped too; scan coverage lists every skipped file.
+
+File score: a stub weighs 25 points, an empty catch 10 and a debug print 5
+per 100 lines, a file shorter than 100 lines counting as 100. One stub alone is
+25 points in any file and does not fail `--ci-mode hard`; three in a short file
+reach the critical band. Logic density is measured (`ldr_equivalent`) and not
+scored: on the pinned corpus the density penalty Rust uses put documented
+interfaces with no finding in the suspicious band.
+
+```swift
+// swift_fatal_error_stub:
+func loadProfile(id: String) async throws -> Profile {
+    fatalError("Not implemented")          // crashes when called
+}
+
+// Fix: implement the code path, or throw an error the caller can handle
+func loadProfile(id: String) async throws -> Profile {
+    throw ProfileError.unavailable
+}
+```
+
+---
+
+## Kotlin
+
+*Added: unreleased - `.kt` and `.kts` files. A token scanner reads them on any
+install (no extra, Python 3.8+) and measures every rule;
+`scan_coverage.analysis_modes` reports it as `token_scanner`. Android
+integration (Gradle task, CI): [MOBILE.md](MOBILE.md).*
+
+| ID | Severity | What it flags |
+|---|---|---|
+| `kotlin_todo_call` | HIGH | `TODO()` / `TODO("Not yet implemented")` (Android Studio's member stub): throws `NotImplementedError` |
+| `kotlin_not_implemented` | HIGH | `throw NotImplementedError()`; `throw X("not implemented")` or `error("not implemented")` |
+| `kotlin_empty_catch` | MEDIUM | `catch (e: Exception) {}` or a `catch` block holding only a comment |
+| `kotlin_print_stack_trace` | MEDIUM | `e.printStackTrace()`: the trace goes to standard error, which an Android app does not keep |
+| `kotlin_debug_print` | MEDIUM | `println()`, `print()`, `System.out.println()` in Android or Compose code |
+| `kotlin_todo_comment` | LOW | `TODO` / `FIXME` / `HACK` / `XXX` leading a comment line (reported, not scored) |
+
+What is not reported:
+
+- a call inside a string, a string template, a char literal or a comment;
+- test code: a file that imports JUnit, kotlin.test, Kotest, AndroidX Test,
+  Compose UI test, Robolectric, MockK, Mockito, Turbine or
+  kotlinx.coroutines.test (analyzed and counted, `test_code: true`, no finding);
+- a `catch` parameter named `_`, `ignore...` or `expected...`: it declares the
+  exception expected (the convention detekt's EmptyCatchBlock follows). A
+  comment in the block does not;
+- a print outside Android and Compose code: a file that imports no `android.*`
+  or `androidx.*` package (a command-line tool, Gradle build logic, a server),
+  a script (`.kts`), or a file with a top-level `fun main`, where standard
+  output is the program's output. In an app, it goes to logcat's `System.out` tag;
+- a print inside `if (BuildConfig.DEBUG)` (also qualified, and joined by `&&`);
+- a member call (`writer.println(...)`) other than `System.out` / `System.err`,
+  a function, value or parameter of the same name the file declares, a Flow
+  `.catch { }` operator, `printStackTrace(writer)` with a destination.
+
+Gradle's `build/` (generated KSP, kapt and Compose sources) is excluded for
+every language. Test sources are skipped like the built-in test patterns
+(`--include-tests` analyzes them): the source sets `src/test*`,
+`src/androidTest*` and `src/*Test` (`commonTest`, `jvmTest`, `iosTest`,
+`androidUnitTest`, ...), and test support in a main source set: a `test` or
+`testing` package or module, and modules named `test-*`, `*-test`, `*-test-*`,
+`*-testing`, `*-testing-*` (`core-testing`, `data-test`, `test-utils`).
+
+File score: as for Swift (stub 25, empty catch 10, `printStackTrace()` and a
+debug print 5 per 100 lines; density measured, not scored).
+
+```kotlin
+// kotlin_todo_call:
+override fun onStartUp(): Duration = TODO("Not yet implemented")
+
+// Fix: implement the code path, or return a value the caller can handle
+override fun onStartUp(): Duration = tracer.elapsedSinceProcessStart()
 ```
 
 ---

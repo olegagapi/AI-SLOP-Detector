@@ -9,6 +9,8 @@ export const SUPPORTED_EXTENSIONS: readonly string[] = [
     '.js', '.jsx', '.ts', '.tsx',
     '.go',
     '.rs',
+    '.swift',
+    '.kt', '.kts',
 ];
 
 export const LANGUAGE_IDS: readonly string[] = [
@@ -16,6 +18,8 @@ export const LANGUAGE_IDS: readonly string[] = [
     'javascript', 'javascriptreact', 'typescript', 'typescriptreact',
     'go',
     'rust',
+    'swift',
+    'kotlin',
 ];
 
 /** Document selector for every analyzed language. */

@@ -382,6 +382,9 @@ class ProjectAnalysis:
     go_file_results: List[Any] = field(default_factory=list)
     # Rust analysis results (RustFileAnalysis objects)
     rust_file_results: List[Any] = field(default_factory=list)
+    # Swift and Kotlin analysis results (token_rules.MobileFileAnalysis objects)
+    swift_file_results: List[Any] = field(default_factory=list)
+    kotlin_file_results: List[Any] = field(default_factory=list)
     # v3.0: CQMS structural coherence — max H0 persistence (MST-based) over file DCFs.
     # 1.0 = all files structurally uniform. Low = distinct structural clusters (AI/human mix signal).
     structural_coherence: float = 1.0

@@ -58,7 +58,10 @@ language registered without its fields; a direct key read) were all caught.
    analysis mode is reported. When the language's build tool writes sources
    into the project (Cargo's `target/`), list them in `extra_ignore`: they
    are skipped for that language only and listed as excluded in scan
-   coverage.
+   coverage. Test sources the build tool keeps apart (Gradle's `src/test`, an
+   Xcode test target) go in `test_ignore`: they are skipped while the run
+   excludes tests (`language_registry.ignore_patterns`) and analyzed with
+   `--include-tests`. Both count as built-in exclusions, not custom rules.
 3. **Schema fields** the slot test asks for: `ProjectAnalysis`,
    `AgentProjectResponse`, `types.d.ts` (the REST snapshot also keeps a
    language without a declared field, as an extra field); remove the
@@ -88,6 +91,13 @@ language registered without its fields; a direct key read) were all caught.
    not measured, and quote no precision figure.
 6. **Mutation.** Break each new rule in a copy and require a test to fail
    (see the mutation runners described in DEVELOPMENT.md).
+7. **A reader without a parser.** A language read by a hand-written scanner
+   (Rust's token scanner; `languages/token_scan.py` for Swift and Kotlin)
+   is checked against an independent parser before release: on the pinned
+   corpus, compare where each string, char literal and comment starts and
+   ends with what the language's tree-sitter grammar reads, and explain each
+   difference. A file the scanner cannot read raises the language's read
+   error (a failed file), never yields a file with no findings.
 
 ## What an adapter does not get
 

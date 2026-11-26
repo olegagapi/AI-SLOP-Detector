@@ -27,7 +27,7 @@ https://github.com/flamehaven01/Flamehaven-MICA.
 | Scoring | `core_scoring.py`, `diagnostic_bands.py` |
 | History and self-calibration | `history.py`, `ml/self_calibrator.py`, `ml/calibration_evidence.py` |
 | CLI | `cli.py`, options `cli_parsers.py`; terminal screen `renderer_terminal.py` |
-| Reports | `renderer_html.py`, `renderer_markdown.py`; AI work order `ai_report_md.py`, JSON Lines `ai_report.py` |
+| Reports | `renderer_html.py`, `renderer_markdown.py`; AI work order `ai_report_md.py`, JSON Lines `ai_report.py`; Xcode and GitHub lines `renderer_diagnostics.py` |
 | VS Code extension, npm wrapper | `vscode-extension/`, `npm-wrapper/` |
 
 ## Making a change

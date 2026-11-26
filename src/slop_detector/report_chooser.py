@@ -36,6 +36,7 @@ NEEDS_TERMINAL = "--interactive needs a terminal (stdin and stdout); no report w
 _CONFLICTS = (
     ("--ci-claims-strict", "ci_claims_strict"),
     ("--format ai", "ai"),
+    ("--format xcode/github", "diagnostics"),
     ("--json", "json"),
     ("--quiet", "quiet"),
     ("--read-only", "read_only"),

@@ -67,12 +67,12 @@ It does **not**:
 
 ## What Counts as Evidence
 
-Every scan writes one history row per analyzed file, Python, JS/TS, Go and
-Rust (`~/.slop-detector/history.db`; old rows are never rewritten). Since
+Every scan writes one history row per analyzed file, Python, JS/TS, Go,
+Rust, Swift and Kotlin (`~/.slop-detector/history.db`; old rows are never rewritten). Since
 3.16.2 a row (schema v7) also records its `language`, its `parser_mode`
 (`python_ast`; `tree_sitter_ast` or the language's fallback reader) and
 `unmeasured_metrics`: LDR, inflation and DDC are Python measurements, so a
-JS/TS, Go or Rust row stores NULL for them (`not_supported`), and so does a
+JS/TS, Go, Rust, Swift or Kotlin row stores NULL for them (`not_supported`), and so does a
 Python row whose metric was skipped (its role, `--patterns-only`, no
 executable code) or that did not parse (`parse_error`). A row records:
 

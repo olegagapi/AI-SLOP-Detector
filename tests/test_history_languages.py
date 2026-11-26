@@ -1,4 +1,4 @@
-"""3.16.2 P1: history of all four languages, each row saying what was measured.
+"""3.16.2 P1: history of every language, each row saying what was measured.
 
 LDR, inflation and DDC are Python measurements. Before 3.16.2 only Python
 files reached history, and a row always held three numbers: a file whose
@@ -7,7 +7,7 @@ did not parse kept placeholder values there (a parse error stored LDR 0.0,
 inflation 999 and DDC 0.0) that read as measurements.
 
 Contract (history schema v7):
-- every analyzed file is recorded, Python, JS/TS, Go and Rust, with its
+- every analyzed file is recorded, Python, JS/TS, Go, Rust, Swift and Kotlin, with its
   `language` and `parser_mode` (python_ast; tree_sitter_ast or the adapter's
   fallback mode);
 - a metric column holds a value only when the metric was measured and
@@ -44,7 +44,16 @@ SOURCES = {
         '\tpanic("a")\n\tpanic("b")\n\tpanic("c")\n}\n'
     ),
     "d.rs": "fn f() -> i32 {\n    todo!()\n}\n",
+    "e.swift": 'func f() -> Int {\n    fatalError("Not implemented")\n}\n',
+    "g.kt": "fun f(): Int = TODO()\n",
 }
+ADAPTERS = (
+    (".js", "javascript"),
+    (".go", "go"),
+    (".rs", "rust"),
+    (".swift", "swift"),
+    (".kt", "kotlin"),
+)
 METRICS = ("ldr_score", "inflation_score", "ddc_usage_ratio")
 
 # The 3.16.1 table: the metric columns are NOT NULL with defaults.
@@ -107,9 +116,11 @@ def test_every_language_is_recorded_with_its_language_and_parser_mode(project, h
         ".js": "javascript",
         ".go": "go",
         ".rs": "rust",
+        ".swift": "swift",
+        ".kt": "kotlin",
     }
     assert rows[".py"]["parser_mode"] == "python_ast"
-    for suffix, name in ((".js", "javascript"), (".go", "go"), (".rs", "rust")):
+    for suffix, name in ADAPTERS:
         (adapter_result,) = getattr(result, spec(name).result_key)
         expected = "tree_sitter_ast" if adapter_result.ast_mode else spec(name).fallback_mode
         assert rows[suffix]["parser_mode"] == expected
@@ -120,7 +131,7 @@ def test_a_language_without_python_metrics_stores_none_of_them(project, history_
     result = _scan_and_record(project)
 
     rows = _by_suffix(_rows(history_db))
-    for suffix, name in ((".js", "javascript"), (".go", "go"), (".rs", "rust")):
+    for suffix, name in ADAPTERS:
         row = rows[suffix]
         (adapter_result,) = getattr(result, spec(name).result_key)
         assert [row[m] for m in METRICS] == [None, None, None], suffix
@@ -305,8 +316,10 @@ def test_the_api_project_route_records_every_language(project, history_db):
     assert sorted(r["language"] for r in _rows(history_db)) == [
         "go",
         "javascript",
+        "kotlin",
         "python",
         "rust",
+        "swift",
     ]
 
 

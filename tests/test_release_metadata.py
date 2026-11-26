@@ -148,14 +148,25 @@ def test_readme_rule_counts_match_the_pattern_registry():
         "JS/TS": r"^\| JavaScript / TypeScript \|",
         "Go": r"^\| Go \|",
         "Rust": r"^\| Rust \|",
+        "Swift": r"^\| Swift \|",
+        "Kotlin": r"^\| Kotlin \|",
     }
     assert set(counts) == set(rows), counts
     for language, pattern in rows.items():
         row = next(line for line in readme.splitlines() if re.match(pattern, line))
         stated = int(row.rstrip(" |").rsplit("|", 1)[1])
         assert stated == counts[language], (language, stated, counts[language])
-    names = {"Python": "Python", "JavaScript / TypeScript": "JS/TS", "Go": "Go", "Rust": "Rust"}
-    diagram = re.findall(r'"(Python|JavaScript / TypeScript|Go|Rust)<br/>[^"]*?(\d+) rules', readme)
+    names = {
+        "Python": "Python",
+        "JavaScript / TypeScript": "JS/TS",
+        "Go": "Go",
+        "Rust": "Rust",
+        "Swift": "Swift",
+        "Kotlin": "Kotlin",
+    }
+    diagram = re.findall(
+        r'"(Python|JavaScript / TypeScript|Go|Rust|Swift|Kotlin)<br/>[^"]*?(\d+) rules', readme
+    )
     assert {names[n] for n, _ in diagram} == set(rows), diagram
     for name, stated in diagram:
         assert int(stated) == counts[names[name]], (name, stated)

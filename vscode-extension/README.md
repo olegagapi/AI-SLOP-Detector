@@ -230,6 +230,14 @@ over 10), `dead_code`, `deep_nesting`, `empty_except`, `interface_only_class`,
 **Rust** (`.rs`, any install; `ai-slop-detector[rust]` adds tree-sitter): `rust_todo_macro`,
 `rust_unimplemented_macro`, `rust_dbg_macro`, `rust_todo_comment`
 
+**Swift** (`.swift`, any install): `swift_fatal_error_stub`, `swift_empty_catch`,
+`swift_debug_print`, `swift_todo_comment`
+
+**Kotlin** (`.kt`, `.kts`, any install; needs a Kotlin language extension in VS
+Code for the `kotlin` language id): `kotlin_todo_call`, `kotlin_not_implemented`,
+`kotlin_empty_catch`, `kotlin_print_stack_trace`, `kotlin_debug_print`,
+`kotlin_todo_comment`
+
 **Lint escape**: `noqa_overuse`, `type_ignore_overuse`
 
 **Hollow review candidates** (backend 3.14+, not scored):

@@ -92,7 +92,8 @@ class GitIntegration:
 
     @staticmethod
     def install_pre_commit_hook(repo_path: str = ".") -> bool:
-        """Install a git pre-commit hook that scans the staged .py files.
+        """Install a git pre-commit hook that scans the staged source files of
+        every analyzed language (Python, JS/TS, Go, Rust, Swift, Kotlin).
 
         The hook runs `python -m slop_detector.precommit --staged --ci-mode hard`
         with the interpreter that installed it (deleting that environment
@@ -130,7 +131,7 @@ class GitIntegration:
         hook_content = (
             "#!/bin/sh\n"
             f"{HOOK_MARKER}\n"
-            "# Scans staged .py files with --ci-mode hard; see slop_detector.precommit.\n"
+            "# Scans staged source files with --ci-mode hard; see slop_detector.precommit.\n"
             f"exec {interpreter} -m slop_detector.precommit --staged --ci-mode hard\n"
         )
         try:

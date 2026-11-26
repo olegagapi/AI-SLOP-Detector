@@ -21,7 +21,7 @@ and the issue addresses.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, FrozenSet, List, Optional, Tuple
+from typing import Any, Callable, FrozenSet, List, Optional, Sequence, Tuple
 
 
 @dataclass(frozen=True)
@@ -39,6 +39,10 @@ class LanguageSpec:
     # Ignore patterns for this language's files only (build output of its
     # toolchain); other languages' files under the same paths are analyzed.
     extra_ignore: Tuple[str, ...] = ()
+    # Test sources by its build tool's layout (Gradle's src/test, an Xcode test
+    # target): skipped like the built-in test patterns, so --include-tests (or
+    # a config whose ignore list drops them) analyzes them. See ignore_patterns.
+    test_ignore: Tuple[str, ...] = ()
 
 
 def _js_analyzer() -> Any:
@@ -94,6 +98,48 @@ def _rust_not_measured() -> Tuple[str, ...]:
     return tuple(rust_analyzer.REGEX_FALLBACK_NOT_MEASURED)
 
 
+def _swift_analyzer() -> Any:
+    from slop_detector.languages.swift_analyzer import SwiftAnalyzer
+
+    return SwiftAnalyzer()
+
+
+def _kotlin_analyzer() -> Any:
+    from slop_detector.languages.kotlin_analyzer import KotlinAnalyzer
+
+    return KotlinAnalyzer()
+
+
+def _swift_ast() -> bool:
+    from slop_detector.languages import swift_analyzer
+
+    return bool(swift_analyzer.AST_AVAILABLE)
+
+
+def _swift_not_measured() -> Tuple[str, ...]:
+    from slop_detector.languages import swift_analyzer
+
+    return tuple(swift_analyzer.REGEX_FALLBACK_NOT_MEASURED)
+
+
+def _kotlin_ast() -> bool:
+    from slop_detector.languages import kotlin_analyzer
+
+    return bool(kotlin_analyzer.AST_AVAILABLE)
+
+
+def _kotlin_not_measured() -> Tuple[str, ...]:
+    from slop_detector.languages import kotlin_analyzer
+
+    return tuple(kotlin_analyzer.REGEX_FALLBACK_NOT_MEASURED)
+
+
+# Both forms of a directory pattern: ignore matching tries a "**/" pattern
+# without its prefix too, so "**/x/**" also matches x/ at the scan root.
+def _anywhere(*names: str) -> Tuple[str, ...]:
+    return tuple(f"**/{name}/**" for name in names)
+
+
 # Order is the analysis order and the order of every listing.
 LANGUAGES: Tuple[LanguageSpec, ...] = (
     LanguageSpec(
@@ -128,6 +174,61 @@ LANGUAGES: Tuple[LanguageSpec, ...] = (
         # Cargo's build directory: generated sources, not the project's code.
         extra_ignore=("target/**", "**/target/**"),
     ),
+    LanguageSpec(
+        name="swift",
+        label="Swift",
+        result_key="swift_file_results",
+        extensions=frozenset({".swift"}),
+        analyzer=_swift_analyzer,
+        fallback_mode="token_scanner",
+        ast_available=_swift_ast,
+        fallback_not_measured=_swift_not_measured,
+        # Not the project's code: SwiftPM's build and checkout directory, Xcode's
+        # build products, CocoaPods and Carthage dependencies, package checkouts
+        # of xcodebuild -clonedSourcePackagesDirPath; files written by code
+        # generators (SwiftProtobuf, grpc-swift, Sourcery, SwiftGen, Apollo).
+        extra_ignore=_anywhere(".build", "DerivedData", "Pods", "Carthage", "SourcePackages")
+        # DocC catalogs: tutorial code is documentation, not a compiled source.
+        + _anywhere("*.docc")
+        + (
+            "**/*.pb.swift",
+            "**/*.grpc.swift",
+            "**/*.generated.swift",
+            "**/*+Generated.swift",
+            "**/*.graphql.swift",
+        ),
+        # SwiftPM's Tests/ and Xcode's <Target>Tests / <Target>UITests targets,
+        # and test support modules (FooTestSupport, FooMocks, ...).
+        test_ignore=_anywhere(
+            "Tests",
+            "*Tests",
+            "*TestSupport",
+            "*TestHelpers",
+            "*TestUtilities",
+            "*TestUtils",
+            "*TestFixtures",
+            "*Mocks",
+        ),
+    ),
+    LanguageSpec(
+        name="kotlin",
+        label="Kotlin",
+        result_key="kotlin_file_results",
+        extensions=frozenset({".kt", ".kts"}),
+        analyzer=_kotlin_analyzer,
+        fallback_mode="token_scanner",
+        ast_available=_kotlin_ast,
+        fallback_not_measured=_kotlin_not_measured,
+        # Gradle's build/ (generated KSP, kapt and Compose sources) is a
+        # default-excluded directory for every language (path_facts).
+        # Gradle test source sets: test, testDebug, testFixtures, androidTest,
+        # androidTestDebug, and the Multiplatform <target>Test sets
+        # (commonTest, jvmTest, iosTest, androidUnitTest, ...); test support
+        # in a main source set: a test or testing package or module, and
+        # modules named like core-testing, data-test, test-utils.
+        test_ignore=("**/src/test*/**", "**/src/androidTest*/**", "**/src/*Test/**")
+        + _anywhere("test", "testing", "test-*", "*-test", "*-test-*", "*-testing", "*-testing-*"),
+    ),
 )
 
 
@@ -148,6 +249,25 @@ def spec_for_suffix(suffix: str) -> Optional[LanguageSpec]:
     """The adapter that reads files with this extension, if any."""
     suffix = suffix.lower()
     return next((item for item in languages() if suffix in item.extensions), None)
+
+
+def ignore_patterns(adapter: LanguageSpec, patterns: Sequence[str]) -> List[str]:
+    """The ignore patterns for `adapter`'s files: the run's patterns, the
+    adapter's own exclusions and, while the run excludes tests (its patterns
+    keep a built-in test pattern, which --include-tests removes), the
+    adapter's test sources. Discovery and scan coverage both ask here, so a
+    file they skip is a file coverage lists as excluded."""
+    from slop_detector.config import DEFAULT_TEST_IGNORE_PATTERNS
+
+    out = list(patterns) + list(adapter.extra_ignore)
+    if any(p in DEFAULT_TEST_IGNORE_PATTERNS for p in patterns):
+        out += list(adapter.test_ignore)
+    return out
+
+
+def default_patterns() -> FrozenSet[str]:
+    """Every adapter's built-in exclusion pattern (a default, not a user's rule)."""
+    return frozenset(p for item in languages() for p in item.extra_ignore + item.test_ignore)
 
 
 def language_results(result: Any) -> List[Tuple[LanguageSpec, List[Any]]]:

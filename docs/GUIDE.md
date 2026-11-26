@@ -15,12 +15,13 @@ AI-SLOP Detector is an **evidence-based static analyzer** that targets a defect 
 
 General linters flag style and convention. This tool flags structural risk.
 
-- **55 checks across Python, JS/TS, Go and Rust** (the [pattern registry](PATTERNS.md)) — empty stubs, imports that don't resolve, unreachable code, copy-paste clones, and buzzword-padded docs
+- **67 checks across Python, JS/TS, Go, Rust, Swift and Kotlin** (the [pattern registry](PATTERNS.md)) — empty stubs, imports that don't resolve, unreachable code, copy-paste clones, and buzzword-padded docs
 - **One 0–100 risk score per file** — four measurements are combined so one bad dimension can't be hidden behind good ones (weighted geometric mean of logic density, jargon inflation, dependency use, and critical severity)
 - **Keeps local history** — every scan is recorded locally with what measured it (detector version, configuration, project root); `--self-calibrate` reports what the comparable runs of your project suggest for the weights. The report is advisory: weights change only when you edit `.slopconfig.yaml`.
 - **Tells real changes from noise** — uses your commit history so a score drifting a point or two isn't mistaken for a real regression
 - **Knows your project type** — `--init` detects the domain (web API, data/ML, numerical, CLI, library, bio, finance, or general; `general` when the evidence is weak) and sets that domain's pattern thresholds, printing every change; weights stay the defaults; override with `--domain`
-- **Python first; JS/TS, Go and Rust too** — `.js`/`.ts`, `.go` and `.rs` files are scanned by the base install; the `[js]` and `[rust]` extras add tree-sitter parsing (Python 3.10+), Go is read by its regex reader either way
+- **Python first; JS/TS, Go, Rust, Swift and Kotlin too** — `.js`/`.ts`, `.go`, `.rs`, `.swift` and `.kt`/`.kts` files are scanned by the base install; the `[js]` and `[rust]` extras add tree-sitter parsing (Python 3.10+), Go is read by its regex reader and Swift and Kotlin by a token scanner either way
+- **iOS and Android projects** — Xcode, SwiftPM, CocoaPods, Carthage and Gradle layouts are understood (dependencies, build output, generated code and test targets are skipped and listed); findings go into Xcode as build warnings (`--format xcode`) and into GitHub pull requests as annotations: [MOBILE.md](MOBILE.md)
 - **Drops into CI** — soft / hard / quarantine gates, GitHub Actions ready
 - **VS Code extension** — inline warnings as you type, score in the status bar
 
@@ -47,7 +48,7 @@ flowchart LR
 
 Every file goes through **four** independent measurement axes (LDR, ICR, DDC,
 Purity) **and** 39 Python rules: 34 pattern checks plus 5 dependency-declaration and provider
-checks (57 rules in all languages, [PATTERNS.md](PATTERNS.md)). Results are combined via a **weighted
+checks (67 rules in all languages, [PATTERNS.md](PATTERNS.md)). Results are combined via a **weighted
 geometric mean** — a near-zero in any single dimension pulls the overall score
 down regardless of other dimensions. Every scan is recorded to local history; `--self-calibrate`
 turns that history into an advisory weight report and never writes weights.
@@ -295,7 +296,7 @@ Adoption and observability surfaces are intentionally separate from scoring:
 
 - This repository measures static code and documentation signals. It does not prove runtime correctness.
 - The default scoring path is deterministic; it does not require an LLM or external API.
-- JS/TS, Go and Rust files are analyzed by the base install with language-specific analyzers. The `[js]` and `[rust]` extras add tree-sitter parsing and need Python 3.10+; on 3.8/3.9 `[js]` fails to resolve (nothing is installed) and `[rust]` installs nothing, and the base package's fallback readers are used. `scan_coverage.analysis_modes` lists any check a fallback cannot measure (the JS/TS fallback: god functions, dead code, complexity; the Go and Rust readers measure all their rules). The Go analyzer reads every file with its regex reader, also when `[go]` is installed.
+- JS/TS, Go, Rust, Swift and Kotlin files are analyzed by the base install with language-specific analyzers. The `[js]` and `[rust]` extras add tree-sitter parsing and need Python 3.10+; on 3.8/3.9 `[js]` fails to resolve (nothing is installed) and `[rust]` installs nothing, and the base package's fallback readers are used. `scan_coverage.analysis_modes` lists any check a fallback cannot measure (the JS/TS fallback: god functions, dead code, complexity; the Go, Rust, Swift and Kotlin readers measure all their rules). The Go analyzer reads every file with its regex reader, also when `[go]` is installed; Swift and Kotlin have no extra.
 - Separately from Rust *analysis*, optional Rust acceleration is available for file discovery and glob matching when a compiled `rust/slop_scan` helper is present; otherwise the Python walker remains the fallback.
 - Narrow framework-aware masking is enabled for test boilerplate (pytest no-op hooks, test-harness console/no-op hooks in JS/TS) and never masks `critical` findings.
 - A low deficit score is evidence of cleaner structure, not a guarantee that the code is complete or safe.
@@ -483,6 +484,23 @@ listed as excluded in scan coverage. Results appear under `rust_file_results`.
 
 ---
 
+**Swift and Kotlin Analysis** — token scanner, no extra needed
+```bash
+slop-detector --project .             # includes .swift, .kt and .kts files on any install
+```
+Swift: `fatalError()` / `preconditionFailure()` stubs whose message says "not implemented"
+(high: they crash when reached), empty `catch` blocks and `print()` / `debugPrint()` /
+`dump()` outside `#if DEBUG` (medium), TODO/FIXME/HACK/XXX comments (low). Kotlin: `TODO()`
+and not-implemented throws (high), empty `catch` blocks, `printStackTrace()` and `println()`
+in Android or Compose code (medium), TODO/FIXME/HACK/XXX comments (low). A file that imports a
+test framework reports nothing; dependencies (`Pods/`, `Carthage/`, `.build/`), build output
+(`DerivedData/`, Gradle's `build/`), generated code and test targets are skipped and listed as
+excluded in scan coverage (`--include-tests` analyzes the test targets). Results appear under
+`swift_file_results` and `kotlin_file_results`. Every rule and what it leaves alone:
+[PATTERNS.md](PATTERNS.md#swift); Xcode, Gradle and CI set-up: [MOBILE.md](MOBILE.md).
+
+---
+
 **Self-Calibration** — advisory weight report (Calibration v2)
 ```bash
 slop-detector . --self-calibrate               # advisory: what this project's history suggests
@@ -497,7 +515,7 @@ run it, and `--apply-calibration` is disabled (it writes nothing and exits 2).
 History recorded before v3.10 has no measurement provenance and is reported as
 legacy, not evidence (on one real database v1 learned 79% of its
 "improvements" from files that had not changed). Since 3.16.2 every language
-is recorded (a JS/TS, Go or Rust row stores no LDR, inflation or DDC), runs
+is recorded (a JS/TS, Go, Rust, Swift or Kotlin row stores no LDR, inflation or DDC), runs
 read by different parsers are not compared, and the report shows each rule's
 evidence: warnings resolved (the code's correctness is not verified),
 unchanged warnings, plain suppressions and `fp:` declarations. An `ok` status
@@ -629,6 +647,7 @@ repos:
       # - id: slop-detector-warn   # soft mode — reports only, never blocks
       # - id: slop-detector-patterns  # fast per-file pattern scan
 ```
+The hooks run when a file of any analyzed language changes (pre-commit 2.9+).
 
 **GitHub Actions** (runs on every PR):
 ```yaml
@@ -639,11 +658,15 @@ repos:
     slop-detector --project . --ci-mode hard --ci-report
 ```
 
+`--format github` adds every finding as a pull request annotation, and
+`--format xcode` writes the compiler diagnostic lines an Xcode build phase
+shows as warnings: [MOBILE.md](MOBILE.md).
+
 **Enforcement modes:**
 ```bash
 --ci-mode soft        # informational, never fails build
 --ci-mode hard        # fails: deficit_score >= 70, critical_patterns >= 3, inflation >= 1.5, ddc < 0.5
-                      # (every analyzed file: Python, JS/TS, Go and Rust; the other languages
+                      # (every analyzed file: Python, JS/TS, Go, Rust, Swift and Kotlin; the others
                       #  have no inflation or DDC metric, so only their score and findings are judged)
 --ci-mode quarantine  # escalates repeat offenders after 3 violations
 ```

@@ -83,12 +83,28 @@ def test_korean_space_and_shell_characters_reach_the_scan(repo):
     assert ODD_NAME in _output(result)  # the one file, intact, was scanned
 
 
-def test_no_staged_python_files_skips(repo):
+def test_no_staged_source_files_skips(repo):
     assert GitIntegration.install_pre_commit_hook(str(repo))
     (repo / "notes.md").write_text("y\n", encoding="utf-8")
     _git(repo, "add", ".")
     result = _commit(repo)
-    assert result.returncode == 0 and "No staged Python files" in _output(result)
+    assert result.returncode == 0 and "No staged source files" in _output(result)
+
+
+def test_a_staged_swift_or_kotlin_file_is_scanned(repo):
+    """iOS and Android repositories: the hook judges every analyzed language."""
+    assert GitIntegration.install_pre_commit_hook(str(repo))
+    stubs = 'func f() { fatalError("TODO") }\n' * 3  # three stubs: the hard gate fails
+    (repo / "Feature.swift").write_text(stubs, encoding="utf-8")
+    (repo / "notes.md").write_text("y\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    result = _commit(repo)
+    assert result.returncode != 0 and "Feature.swift" in _output(result), _output(result)
+    _git(repo, "reset", "-q")
+    (repo / "Sync.kt").write_text("fun f(): Int = 1\n", encoding="utf-8")
+    _git(repo, "add", "Sync.kt")
+    result = _commit(repo)
+    assert result.returncode == 0 and "No staged source files" not in _output(result)
 
 
 def test_detector_that_cannot_run_blocks_the_commit(repo, tmp_path):

@@ -86,6 +86,7 @@ def _progress(args):
     if (
         args.json
         or getattr(args, "ai", False)
+        or getattr(args, "diagnostics", False)
         or getattr(args, "quiet", False)
         or args.output
         or getattr(args, "ci_report", False)

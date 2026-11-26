@@ -214,6 +214,8 @@ def evaluate_ci_gate(args, result):
     gate_result = evaluate_gate(result, mode=mode, claims_strict=claims_strict, read_only=False)
     if gate_result is None:
         return None
+    # --format xcode / github state a failed gate in their own format.
+    args.gate_failure = gate_result.message if gate_exit_code(gate_result) else None
     if args.ci_report:
         if args.json:
             report = json.dumps(

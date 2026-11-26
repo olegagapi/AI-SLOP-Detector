@@ -142,6 +142,21 @@ def _write_ai_report(args, result) -> None:
         _write_stdout_utf8(text)
 
 
+def _write_diagnostics(args, result) -> None:
+    """--format xcode / github: one line per finding, to stdout or --output."""
+    from slop_detector.renderer_diagnostics import gate_line, render_github, render_xcode
+
+    text = render_xcode(result) if args.format == "xcode" else render_github(result)
+    failure = getattr(args, "gate_failure", None)
+    if failure:
+        mode = getattr(args, "ci_mode", None)
+        text += gate_line(args.format, f"--ci-mode {mode}" if mode else "gate", failure)
+    if args.output:
+        _write_file(str(args.output), text, "Diagnostics")
+    else:
+        _write_stdout_utf8(text)
+
+
 def _write_stdout_utf8(text: str) -> None:
     """A machine document is UTF-8 whatever the console code page: through the
     byte stream when stdout has one (a cp949 console cannot encode an em dash
@@ -194,6 +209,9 @@ def _handle_output(args, result) -> None:
 def _handle_screen_output(args, result, rich_available: bool) -> None:
     if getattr(args, "ai", False):
         _write_ai_report(args, result)
+        return
+    if getattr(args, "diagnostics", False):
+        _write_diagnostics(args, result)
         return
     if args.json:
         _write_json_output(args, result)

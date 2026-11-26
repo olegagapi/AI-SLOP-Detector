@@ -348,7 +348,7 @@ def test_the_vscode_extension_has_one_language_list_covering_the_registry():
     assert {f"onLanguage:{i}" for i in ids} <= events, ids
     # a list of languages elsewhere (two extensions on a line, or a language
     # selector); a check for one language's own feature is allowed
-    ext = re.compile(r"'\.(py|jsx?|tsx?|go|rs)'")
+    ext = re.compile(r"'\.(py|jsx?|tsx?|go|rs|swift|kts?)'")
     others = [
         f"{p.name}:{n}"
         for p in ext_src.glob("*.ts")

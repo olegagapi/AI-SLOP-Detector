@@ -10,6 +10,8 @@ Authorities, kept apart per surface:
   JS/TS   JSIssue(...) calls in languages/js_analyzer.py
   Go      GoIssue(...) calls in languages/go_analyzer.py
   Rust    the _RULES table and _COMMENT_RULE of languages/rust_analyzer.py
+  Swift   the RULES table of languages/swift_analyzer.py
+  Kotlin  the RULES table of languages/kotlin_analyzer.py
 Every registered language (language_registry) must have an authority here.
 
 A severity cell starts with the default severity; other severities a rule can
@@ -118,10 +120,21 @@ def _rust_rules() -> Dict[str, Rule]:
     return {pid: ("Rust", {severity}, severity) for pid, severity, *_ in table}
 
 
+def _table_rules(module: str, language: str) -> Dict[str, Rule]:
+    """A RULES table {pattern_id: (severity, message, fix)}; the analyzer emits
+    every finding from it (token_rules.issue), so its severity is the only one."""
+    import importlib
+
+    table = importlib.import_module(f"slop_detector.languages.{module}").RULES
+    return {pid: (language, {severity}, severity) for pid, (severity, *_) in table.items()}
+
+
 ADAPTER_AUTHORITIES = {
     "javascript": lambda: _analyzer_rules("js_analyzer.py", "JSIssue", "JS/TS"),
     "go": lambda: _analyzer_rules("go_analyzer.py", "GoIssue", "Go"),
     "rust": _rust_rules,
+    "swift": lambda: _table_rules("swift_analyzer", "Swift"),
+    "kotlin": lambda: _table_rules("kotlin_analyzer", "Kotlin"),
 }
 
 

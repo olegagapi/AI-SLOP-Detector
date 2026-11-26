@@ -5,7 +5,8 @@
     FAIL. Reports normal scan output before returning the gate exit code.
   entry: python -m slop_detector.cli
   language: python
-  types: [python]
+  # every analyzed language (pre-commit identify tags); needs pre-commit 2.9+
+  types_or: [python, javascript, jsx, ts, tsx, go, rust, swift, kotlin]
   pass_filenames: false
   args: ['--project', '.', '--ci-mode', 'hard']
   require_serial: false
@@ -17,7 +18,8 @@
     normally and does not fail for gate findings.
   entry: python -m slop_detector.cli
   language: python
-  types: [python]
+  # every analyzed language (pre-commit identify tags); needs pre-commit 2.9+
+  types_or: [python, javascript, jsx, ts, tsx, go, rust, swift, kotlin]
   pass_filenames: false
   args: ['--project', '.', '--ci-mode', 'soft']
   require_serial: false
@@ -30,7 +32,8 @@
     exceeds 50.
   entry: python -m slop_detector.precommit
   language: python
-  types: [python]
+  # every analyzed language (pre-commit identify tags); needs pre-commit 2.9+
+  types_or: [python, javascript, jsx, ts, tsx, go, rust, swift, kotlin]
   pass_filenames: true
   args: ['--patterns-only', '--fail-threshold', '50']
   require_serial: false

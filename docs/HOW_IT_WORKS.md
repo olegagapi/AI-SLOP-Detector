@@ -434,7 +434,7 @@ flowchart TD
     F -->|Yes| B
     F -->|No| G[Process Queue]
     
-    G --> H[Analyze Python, JS/TS, Go and Rust files]
+    G --> H[Analyze Python, JS/TS, Go, Rust, Swift and Kotlin files]
     H --> I[Collect Results]
     
     I --> J[Calculate Aggregates]

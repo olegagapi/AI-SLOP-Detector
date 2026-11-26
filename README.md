@@ -8,7 +8,7 @@
 <h3 align="center">Ship Code. Not Slop.</h3>
 
 <p align="center">
-Find warning signs of unfinished code in Python, JavaScript/TypeScript, Go, and Rust.<br/>
+Find warning signs of unfinished code in Python, JavaScript/TypeScript, Go, Rust, Swift and Kotlin.<br/>
 <b>No API key. No network calls. Your code never leaves your machine.</b>
 </p>
 
@@ -17,7 +17,7 @@ Find warning signs of unfinished code in Python, JavaScript/TypeScript, Go, and 
   <a href="https://www.npmjs.com/package/ai-slop-detector"><img src="https://img.shields.io/npm/v/ai-slop-detector.svg?v=3.18.0" alt="npm version"/></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=Flamehaven.vscode-slop-detector"><img src="https://vsmarketplacebadges.dev/version-short/Flamehaven.vscode-slop-detector.svg" alt="VS Code Marketplace version"/></a>
   <a href="https://pypi.org/project/ai-slop-detector/"><img src="https://img.shields.io/pypi/pyversions/ai-slop-detector.svg" alt="Python versions"/></a>
-  <a href="https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/PATTERNS.md"><img src="https://img.shields.io/badge/languages-Python%20%7C%20JS%2FTS%20%7C%20Go%20%7C%20Rust-informational" alt="Languages: Python, JS/TS, Go, Rust"/></a>
+  <a href="https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/PATTERNS.md"><img src="https://img.shields.io/badge/languages-Python%20%7C%20JS%2FTS%20%7C%20Go%20%7C%20Rust%20%7C%20Swift%20%7C%20Kotlin-informational" alt="Languages: Python, JS/TS, Go, Rust, Swift, Kotlin"/></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"/></a>
   <a href="https://github.com/flamehaven01/AI-SLOP-Detector/actions"><img src="https://github.com/flamehaven01/AI-SLOP-Detector/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
 </p>
@@ -34,6 +34,7 @@ Find warning signs of unfinished code in Python, JavaScript/TypeScript, Go, and 
   <a href="#what-you-get">What You Get</a> ·
   <a href="#vs-code-extension">VS Code</a> ·
   <a href="#cicd-integration">CI/CD</a> ·
+  <a href="#ios-and-android">iOS &amp; Android</a> ·
   <a href="#ai-agents">AI Agents</a> ·
   <a href="#security-considerations">Security</a> ·
   <a href="https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/GUIDE.md">Full Guide</a>
@@ -52,10 +53,10 @@ running it, reports each spot with the **file, the line, the rule and a fix**,
 and gives every file a 0-100 score (higher = more warning signs). It does not
 tell whether a person or an AI wrote the code; it reports what is in the code.
 
-- **57 rules** across Python (39), JavaScript/TypeScript (8), Go (6) and Rust (4)
+- **67 rules** across Python (39), JavaScript/TypeScript (8), Go (6), Rust (4), Swift (4) and Kotlin (6)
 - **Deterministic**: the same input gives byte-identical JSON
 - **Local only**: no API key, no model download, no network call during a scan
-- **Everywhere you work**: terminal, VS Code, CI gates, pre-commit, AI agents (CLI JSON and a Claude Code skill)
+- **Everywhere you work**: terminal, VS Code, Xcode build phases, Gradle, CI gates and pull request annotations, pre-commit, AI agents (CLI JSON and a Claude Code skill)
 
 ## Quick Start
 
@@ -172,13 +173,15 @@ Details: [docs/REPORTS.md](https://github.com/flamehaven01/AI-SLOP-Detector/blob
 | JavaScript / TypeScript | `.js` `.jsx` `.ts` `.tsx` | regex reader (god functions, dead code and complexity are not measured) | `[js]`: tree-sitter, measures all 8 | 8 |
 | Go | `.go` | regex reader, measures every Go rule | `[go]` installs tree-sitter-go; the analyzer does not use it yet | 6 |
 | Rust | `.rs` | token scanner, measures every Rust rule | `[rust]`: tree-sitter, same findings | 4 |
+| Swift | `.swift` | token scanner, measures every Swift rule | - | 4 |
+| Kotlin | `.kt` `.kts` | token scanner, measures every Kotlin rule | - | 6 |
 
 ```bash
 pip install "ai-slop-detector[js]"     # or [rust]; on Python 3.8/3.9 the base install reads these files
 ```
 
 Rule counts come from the pattern registry in [docs/PATTERNS.md](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/PATTERNS.md)
-(57 rules), which a test keeps in line with the analyzers. A scan says which reader ran for each language
+(67 rules), which a test keeps in line with the analyzers. A scan says which reader ran for each language
 (`scan_coverage.analysis_modes`).
 
 ## What It Detects
@@ -189,12 +192,14 @@ Rule counts come from the pattern registry in [docs/PATTERNS.md](https://github.
 | JavaScript / TypeScript | `any` types, empty arrow functions, `==`, leftover `console.log` | `js_any_type`, `js_empty_arrow`, `js_double_equals`, `js_console_log` |
 | Go | ignored errors, `panic()` as error handling, empty functions | `go_ignored_error`, `go_panic`, `go_empty_func` |
 | Rust | `todo!()` and `unimplemented!()` outside test code, leftover `dbg!()` | `rust_todo_macro`, `rust_unimplemented_macro`, `rust_dbg_macro` |
+| Swift | `fatalError("Not implemented")`, an empty `catch`, a leftover `print()` outside `#if DEBUG` | `swift_fatal_error_stub`, `swift_empty_catch`, `swift_debug_print` |
+| Kotlin | `TODO("Not yet implemented")`, `throw NotImplementedError()`, an empty `catch`, `printStackTrace()`, `println()` in Android code | `kotlin_todo_call`, `kotlin_not_implemented`, `kotlin_empty_catch`, `kotlin_debug_print` |
 
 Python files also get **hollow review candidates**: functions that report
 success with no effect, inputs that reach nothing, docstring promises the body
 cannot keep. They are listed for review and never change the score.
 
-All 57 rules: [docs/PATTERNS.md](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/PATTERNS.md).
+All 67 rules: [docs/PATTERNS.md](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/PATTERNS.md).
 
 ## How It Works
 
@@ -205,10 +210,14 @@ flowchart TD
     B -->|.js .jsx .ts .tsx| J["JavaScript / TypeScript<br/>tree-sitter or regex, 8 rules"]
     B -->|.go| G["Go<br/>regex reader, 6 rules"]
     B -->|.rs| R["Rust<br/>tree-sitter or token scanner, 4 rules"]
+    B -->|.swift| W["Swift<br/>token scanner, 4 rules"]
+    B -->|.kt .kts| K["Kotlin<br/>token scanner, 6 rules"]
     P --> F["File score 0-100<br/>higher = more warning signs"]
     J --> F
     G --> F
     R --> F
+    W --> F
+    K --> F
     P --> H["Hollow review candidates<br/>Python only, not scored"]
     F --> S["Project score<br/>weighted by lines of code"]
     S --> O["Terminal, Markdown, HTML/PDF,<br/>JSON, AI work order"]
@@ -244,7 +253,7 @@ How the score is computed: [the scoring model in the guide](https://github.com/f
 
 ## VS Code Extension
 
-Findings where you write code, for all four languages: a tint and a severity
+Findings where you write code, for all six languages: a tint and a severity
 bar on the line, the message at the end of it, a hover with the **Fix** and a
 link that copies a work order for an AI agent, the Problems panel, a sidebar
 of files by score, and the file score in the status bar. It runs the same
@@ -273,10 +282,30 @@ local backend; nothing is sent anywhere.
 | `--ci-mode hard` | Fails on a deficit score >= 70, 3 or more critical patterns, inflation >= 1.5 or DDC < 0.5 (inflation and DDC are Python metrics) |
 | `--ci-mode quarantine` | Escalates a file after 3 violations |
 
-The gate judges every analyzed file: Python, JS/TS, Go and Rust. pre-commit
+The gate judges every analyzed file: Python, JS/TS, Go, Rust, Swift and Kotlin. pre-commit
 hooks (`slop-detector`, `slop-detector-warn`, `slop-detector-patterns`) and
 more: [CI/CD in the guide](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/GUIDE.md#cicd-integration) ·
 [docs/CI_CD.md](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/CI_CD.md).
+
+## iOS and Android
+
+Swift and Kotlin are read by the base install: no Xcode, JDK or Gradle needed,
+so a pull request check runs on a Linux runner. Dependencies (`Pods/`,
+`Carthage/`, `.build/`), build output (`DerivedData/`, Gradle's `build/`),
+generated code and test targets are skipped and listed in the scan coverage.
+
+```sh
+# Xcode: Build Phases > New Run Script Phase (findings become build warnings)
+slop-detector --project "$SRCROOT" --format xcode --read-only
+
+# GitHub Actions: findings as pull request annotations, then the gate
+slop-detector --project . --format github --read-only
+slop-detector --project . --ci-mode hard --ci-report --no-history
+```
+
+The Xcode build phase settings, a Gradle task for Android, pre-commit and
+adopting it in an existing app:
+[docs/MOBILE.md](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/MOBILE.md).
 
 ## AI Agents
 
@@ -323,7 +352,7 @@ Details: [Claude Code integration](https://github.com/flamehaven01/AI-SLOP-Detec
 ## Local Calibration
 
 Every scan is recorded locally (`~/.slop-detector/history.db`) with what
-measured it, for all four languages. `slop-detector . --self-calibrate`
+measured it, for every analyzed language. `slop-detector . --self-calibrate`
 reports how the weights would change from the comparable runs of one
 project. It is advisory: it never writes weights; you change them in
 `.slopconfig.yaml` if you agree.
@@ -380,7 +409,7 @@ Use a linter for correctness-of-form. Use this for "is this code real, or just p
 
 - **You want style or formatting enforcement** — use ruff / black / ESLint. This tool ignores style on purpose.
 - **You need a runtime correctness guarantee** — a low score means cleaner structure, not that the code works. Keep your tests.
-- **Your code isn't Python, JS/TS, Go or Rust** — other languages aren't analyzed yet.
+- **Your code isn't Python, JS/TS, Go, Rust, Swift or Kotlin** — other languages (Objective-C, Java, Dart) aren't analyzed.
 - **You expect thresholds tuned to your repository** — weights are the defaults or the values in your `.slopconfig.yaml`; nothing tunes them automatically. Treat findings as leads, not verdicts.
 
 ## How Results Are Checked
@@ -434,6 +463,7 @@ The full guide holds everything this page leaves out:
 | Topic | Where |
 |---|---|
 | Every command, the npm wrapper | [All commands](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/GUIDE.md#all-commands) · [CLI usage](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/CLI_USAGE.md) |
+| iOS and Android | [Xcode, Gradle, CI, pre-commit](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/MOBILE.md) |
 | Reports | [Reports](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/REPORTS.md) · [AI work order](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/AI_WORK_ORDER.md) |
 | Rules and analyzers | [Patterns](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/PATTERNS.md) · [What it detects](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/GUIDE.md#what-it-detects) · [Adding a language](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/ADDING_A_LANGUAGE.md) |
 | Scoring and metrics | [How it works](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/HOW_IT_WORKS.md) · [Math models](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/MATH_MODELS.md) · [Validation](https://github.com/flamehaven01/AI-SLOP-Detector/blob/main/docs/VALIDATION.md) |

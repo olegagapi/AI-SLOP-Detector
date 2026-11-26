@@ -30,7 +30,7 @@ pip install "ai-slop-detector[go]"   # installs tree-sitter-go (Python 3.10+); t
 pip install "ai-slop-detector[rust]" # optional Rust tree-sitter parsing (Python 3.10+; .rs files are scanned without it)
 ```
 
-The CLI analyzes one JS/TS, Go or Rust file directly (`slop-detector scan lib.rs`).
+The CLI analyzes one JS/TS, Go, Rust, Swift or Kotlin file directly (`slop-detector scan lib.rs`).
 
 Optional Node-first wrapper:
 

@@ -46,6 +46,8 @@
     "onLanguage:javascriptreact",
     "onLanguage:typescriptreact",
     "onLanguage:rust",
+    "onLanguage:swift",
+    "onLanguage:kotlin",
     "onCommand:slop-detector.exportReport",
     "onCommand:slop-detector.openReport"
   ],

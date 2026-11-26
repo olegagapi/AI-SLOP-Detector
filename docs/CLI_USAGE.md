@@ -70,6 +70,8 @@ slop-detector scan . --format ai -o ai-report.jsonl     # AI report, JSON Lines
 slop-detector scan . --format ai-md -o ai-report.md     # AI work order (auditor)
 slop-detector scan . --format ai-md --ai-mode agent -o ai-work.md
 slop-detector scan . --format ai-md --ai-token-budget 32000 -o ai-report.md
+slop-detector scan . --format xcode                     # path:line:column: warning: lines (Xcode build phase)
+slop-detector scan . --format github                    # GitHub Actions pull request annotations
 slop-detector scan . --report-dir slop-report           # all of the above at once
 slop-detector --project . --interactive                 # choose which of them to save, on a terminal
 ```
@@ -87,6 +89,12 @@ slop-detector --project . --interactive                 # choose which of them t
   [REPORTS.md](REPORTS.md).
 - An AI report that fails its schema or ruleset check writes nothing and
   exits 2.
+- `--format xcode` and `--format github` write one line per finding of every
+  language and per file that could not be analyzed (columns 1-based; `github`
+  paths relative to `$GITHUB_WORKSPACE`, most severe first). They do not
+  change the exit code; with `--ci-mode`, a failed gate ends the output with
+  one error line. `--report-dir` does not write them. Set-up for Xcode and
+  CI: [MOBILE.md](MOBILE.md).
 
 What each surface shows: [REPORTS.md](REPORTS.md). The work order:
 [AI_WORK_ORDER.md](AI_WORK_ORDER.md).

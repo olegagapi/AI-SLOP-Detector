@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+Swift and Kotlin analysis, for iOS and Android projects: two language
+adapters read by a token scanner on every install (Python 3.8+, no extra),
+Xcode and Gradle layouts understood, findings in Xcode build phases and on
+GitHub pull requests. Set-up: [docs/MOBILE.md](docs/MOBILE.md); every rule and
+what it leaves alone: [docs/PATTERNS.md](docs/PATTERNS.md#swift).
+
+### Changes you see when upgrading
+
+- `.swift`, `.kt` and `.kts` files are analyzed; they were listed as
+  unsupported in scan coverage. A project with such files gets findings,
+  scores and gate verdicts for them, and its weighted score, file counts and
+  finding summary include them.
+- New scan JSON keys (additive): `swift_file_results` and
+  `kotlin_file_results` (also in the REST `AgentProjectResponse` and the npm
+  types), `scan_coverage.analyzed.swift` / `.kotlin`, and
+  `scan_coverage.analysis_modes.swift` / `.kotlin` (`token_scanner`) when such
+  files are present. A Swift or Kotlin file result carries `test_code` (true
+  for a file that imports a test framework, which reports nothing).
+- Ten rules (67 in all languages): `swift_fatal_error_stub` and
+  `kotlin_todo_call`, `kotlin_not_implemented` (high); `swift_empty_catch`,
+  `swift_debug_print`, `kotlin_empty_catch`, `kotlin_print_stack_trace`,
+  `kotlin_debug_print` (medium); `swift_todo_comment`, `kotlin_todo_comment`
+  (low, not scored). File score: a stub 25, an empty catch 10, a debug print
+  5 per 100 lines, a file under 100 lines counting as 100; logic density is
+  measured and, unlike Rust and Go, not scored.
+- Built-in exclusions, for Swift files: `.build/`, `DerivedData/`, `Pods/`,
+  `Carthage/`, `SourcePackages/`, `*.docc/`, `*.pb.swift`, `*.grpc.swift`,
+  `*.generated.swift`, `*+Generated.swift`, `*.graphql.swift`. Test sources
+  (`LanguageSpec.test_ignore`, new) are skipped like the built-in test
+  patterns and analyzed with `--include-tests`: Swift `Tests/`, `*Tests/`,
+  `*TestSupport/`, `*TestHelpers/`, `*TestUtilities/`, `*TestUtils/`,
+  `*TestFixtures/`, `*Mocks/`; Kotlin `src/test*/`, `src/androidTest*/`,
+  `src/*Test/`, a `test` or `testing` package or module, and modules named
+  `test-*`, `*-test`, `*-test-*`, `*-testing`, `*-testing-*`. All are listed as
+  excluded (built-in, not custom rules).
+- `--format xcode` (one `path:line:column: warning: message` line per
+  finding, for an Xcode Run Script build phase) and `--format github`
+  (GitHub Actions annotations). Both list every language's findings and the
+  files that could not be analyzed; neither changes the exit code; with
+  `--ci-mode`, a failed gate ends the output with one error line.
+  `--interactive` refuses them, like the other output formats.
+- The shipped pre-commit hooks filter with `types_or` over every analyzed
+  language instead of `types: [python]`: they now run when only a JS/TS, Go,
+  Rust, Swift or Kotlin file changed (pre-commit 2.9+).
+- The git hook (`GitIntegration.install_pre_commit_hook`,
+  `python -m slop_detector.precommit --staged`) scans the staged files of
+  every analyzed language; it scanned `.py` files only. A staged JS/TS, Go or
+  Rust file that fails the hard gate now blocks the commit. An installed hook
+  needs no reinstall. Its message for a commit without such files is
+  "No staged source files to check" (was "No staged Python files to check").
+- `review` / `audit` and `health`: the introduced and inherited files, the
+  findings list and the review targets include JS/TS, Go, Rust, Swift and
+  Kotlin files; they held Python files only. The verdict is unchanged: the
+  gate already judged every language.
+
+### What does not change
+
+- Python, JS/TS, Go and Rust analysis. Scan JSON, compared byte for byte with
+  3.18.0 (each side its own empty HOME, each run twice): the demo project and
+  the 3.18.0 source tree differ only by the four new keys (`swift` and
+  `kotlin` analyzed counts of 0, two empty result lists); a second run gives
+  the same bytes as the first on both sides.
+
+### Checked before release
+
+- The token scanner against tree-sitter-kotlin and tree-sitter-swift on 13
+  public iOS and Android repositories pinned at a commit (2026-11-26): on the
+  15,946 Kotlin files the grammar parses without an error, every string, char
+  literal and comment boundary agreed; on 4,444 Swift files, 7 differed, each
+  a tree-sitter reading of `"/*"` inside a string as a comment (5) or of
+  `#error` / `#warning` as no string (2). None of the corpus's 20,623 Swift
+  and Kotlin files failed to read.
+
+---
+
 ## [3.18.0] - 2026-11-23
 
 Python import findings are judged by which distribution provides the import

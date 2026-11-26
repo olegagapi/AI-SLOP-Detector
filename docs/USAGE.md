@@ -55,7 +55,7 @@ pip install ai-slop-detector
 slop-detector --version
 ```
 
-JS/TS, Go and Rust files are analyzed by this install. The `[js]` and `[rust]`
+JS/TS, Go, Rust, Swift and Kotlin files are analyzed by this install (for iOS and Android projects see [MOBILE.md](MOBILE.md)). The `[js]` and `[rust]`
 extras add tree-sitter parsing on Python 3.10+ (see the
 [language table](../README.md#languages)). For a Node-first transport wrapper,
 see the npm section of [CLI_USAGE.md](CLI_USAGE.md).

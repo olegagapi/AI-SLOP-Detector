@@ -6,7 +6,7 @@
     "version": "3.18.0",
     "version_note": "the latest release; an invariant with an 'unreleased' status applies only to the development line after it",
     "status": "active",
-    "summary": "Static analyzer for warning signs of unfinished code in Python, JS/TS, Go and Rust. Runs locally; reports for people (terminal, HTML, Markdown) and for AI agents (work order, JSON Lines, JSON, MCP)."
+    "summary": "Static analyzer for warning signs of unfinished code in Python, JS/TS, Go, Rust, Swift and Kotlin. Runs locally; reports for people (terminal, HTML, Markdown) and for AI agents (work order, JSON Lines, JSON, MCP)."
   },
   "how_to_read": "Each design invariant is a decision a change must not undo. held_by names the tests meant to fail when it is undone; an invariant with no test says which procedure holds it. tests/test_mica_package.py checks that every named test and file exists, not that it is sufficient. A critical invariant names the release or incident it came from. If code or tests now disagree with an entry, report the conflict; do not follow either silently.",
   "design_invariants": [
@@ -109,7 +109,7 @@
     {
       "id": "DI-008",
       "label": "unmeasured-is-null",
-      "statement": "History stores a metric only when it was measured and counted. LDR, inflation and DDC are Python metrics: a JS/TS, Go or Rust row stores NULL for them, and so does a Python row whose metric was skipped or that did not parse; unmeasured_metrics says why. Never store a default as if it were measured.",
+      "statement": "History stores a metric only when it was measured and counted. LDR, inflation and DDC are Python metrics: a JS/TS, Go, Rust, Swift or Kotlin row stores NULL for them, and so does a Python row whose metric was skipped or that did not parse; unmeasured_metrics says why. Never store a default as if it were measured.",
       "severity": "critical",
       "held_by": [
         "tests/test_history_languages.py::test_a_language_without_python_metrics_stores_none_of_them",
@@ -254,9 +254,20 @@
       "held_by": [
         "tests/test_mcp_docs_match_framing.py::test_the_docs_match_the_server_on_newline_framing"
       ]
+    },
+    {
+      "id": "DI-020",
+      "label": "adapter-test-sources-follow-the-test-defaults",
+      "statement": "A language's test sources (LanguageSpec.test_ignore: Xcode and SwiftPM test targets, Gradle test source sets and test-support modules) are skipped exactly while the run keeps a built-in test pattern, and --include-tests analyzes them. Discovery and scan coverage both take their patterns from language_registry.ignore_patterns, so a skipped file is always listed as excluded, as a built-in exclusion (by_source default), never as a custom rule.",
+      "severity": "high",
+      "status": "unreleased (development line after 3.18.0)",
+      "held_by": [
+        "tests/test_swift_analyzer.py::test_test_targets_are_excluded_unless_tests_are_included",
+        "tests/test_kotlin_analyzer.py::test_gradle_build_output_and_test_source_sets_are_excluded"
+      ]
     }
   ],
   "operation_meta": {
-    "last_updated": "2026-11-19"
+    "last_updated": "2026-11-26"
   }
 }

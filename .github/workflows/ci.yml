@@ -140,6 +140,29 @@ jobs:
           pytest tests/test_rust_analyzer.py -v -rs --no-cov -p no:cacheprovider | tee rust_tests.txt
           if grep -q SKIPPED rust_tests.txt; then echo "Rust tree-sitter tests were skipped"; exit 1; fi
 
+  test-mobile-fixtures:
+    name: Swift and Kotlin fixtures (tree-sitter)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # The grammars are not package dependencies: the analyzers read Swift and
+      # Kotlin with their token scanner (the matrix runs their tests on every
+      # install). Here the tests' fixtures must parse with an independent grammar.
+      - name: Install dependencies and the grammars
+        run: pip install -e ".[dev]" "tree-sitter>=0.25.0" "tree-sitter-swift==0.7.4" "tree-sitter-kotlin==1.1.0"
+
+      - name: Fixtures parse, analyzer tests pass (must not skip)
+        run: |
+          set -o pipefail
+          pytest tests/test_mobile_fixtures_parse.py tests/test_swift_analyzer.py tests/test_kotlin_analyzer.py tests/test_token_scan.py -v -rs --no-cov -p no:cacheprovider | tee mobile_tests.txt
+          if grep -q SKIPPED mobile_tests.txt; then echo "Swift/Kotlin fixture tests were skipped"; exit 1; fi
+
   rust-accelerator:
     name: Rust Accelerator
     runs-on: ubuntu-latest

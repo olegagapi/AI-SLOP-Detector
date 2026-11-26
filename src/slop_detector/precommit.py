@@ -8,8 +8,10 @@ scoring of its own.
     python -m slop_detector.precommit [scan flags] FILE [FILE ...]
     python -m slop_detector.precommit --staged [scan flags]
 
---staged scans the staged .py files instead of the listed ones (the git hook
-that GitIntegration.install_pre_commit_hook writes uses it).
+--staged scans the staged source files of every analyzed language (Python and
+each language_registry adapter: .js, .go, .rs, .swift, .kt, ...) instead of
+the listed ones (the git hook that GitIntegration.install_pre_commit_hook
+writes uses it).
 """
 
 from __future__ import annotations
@@ -63,8 +65,17 @@ def _git_paths(args: List[str]) -> List[str]:
     return [path.decode("utf-8") for path in out.split(b"\0") if path]
 
 
-def staged_python_files() -> Tuple[List[str], List[str]]:
-    """(staged added/copied/modified/renamed .py files, those also changed since staging).
+def _analyzed(path: str) -> bool:
+    """A file of an analyzed language: Python or a registered adapter."""
+    from slop_detector.language_registry import spec_for_suffix
+
+    suffix = Path(path).suffix.lower()
+    return suffix == ".py" or spec_for_suffix(suffix) is not None
+
+
+def staged_source_files() -> Tuple[List[str], List[str]]:
+    """(staged added/copied/modified/renamed source files of an analyzed
+    language, those also changed since staging).
 
     Paths are relative to the repository top, where git runs hooks. The scan
     reads the working tree, so a file changed after `git add` would not be the
@@ -73,7 +84,7 @@ def staged_python_files() -> Tuple[List[str], List[str]]:
     staged = [
         p
         for p in _git_paths(["diff", "--cached", "--name-only", "--diff-filter=ACMR"])
-        if p.endswith(".py")
+        if _analyzed(p)
     ]
     unstaged = set(_git_paths(["diff", "--name-only"])) if staged else set()
     return staged, [p for p in staged if p in unstaged]
@@ -82,7 +93,7 @@ def staged_python_files() -> Tuple[List[str], List[str]]:
 def _staged_files() -> Optional[List[str]]:
     """Files for --staged, or None after printing why the commit must stop."""
     try:
-        staged, diverged = staged_python_files()
+        staged, diverged = staged_source_files()
     except (OSError, subprocess.CalledProcessError, UnicodeDecodeError) as exc:
         print(f"[-] Cannot list staged files: {type(exc).__name__}", file=sys.stderr)
         return None
@@ -104,7 +115,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if staged is None:
             return 1
         if not staged:
-            print("[+] No staged Python files to check")
+            print("[+] No staged source files to check")
             return 0
         files = staged
     worst = 0

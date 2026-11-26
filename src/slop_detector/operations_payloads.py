@@ -10,8 +10,23 @@ from slop_detector.analysis.cross_file import CrossFileAnalyzer
 from slop_detector.ci_gate import CIGate
 from slop_detector.diagnostic_bands import SUSPICIOUS_AT
 from slop_detector.gate.models import GateMode
+from slop_detector.language_registry import all_file_results
 from slop_detector.operations_cleanup import _collect_cleanup_issues
 from slop_detector.path_facts import relative_to_root
+
+
+def _file_score(fr: Any) -> float:
+    """A file's score: a Python result's deficit_score, an adapter's slop_score."""
+    if hasattr(fr, "deficit_score"):
+        return float(getattr(fr, "deficit_score", 0.0) or 0.0)
+    return float(getattr(fr, "slop_score", 0.0) or 0.0)
+
+
+def _file_issues(fr: Any) -> List[Any]:
+    """A Python result's pattern issues, or an adapter result's issues."""
+    if hasattr(fr, "pattern_issues"):
+        return list(getattr(fr, "pattern_issues", None) or [])
+    return list(getattr(fr, "issues", None) or [])
 
 
 def _run_git(args: List[str], cwd: Path) -> List[str]:
@@ -60,21 +75,16 @@ def _top_targets(result, limit: int = 10) -> List[Dict[str, Any]]:
             for h in hotspots[:limit]
         ]
 
-    file_results = sorted(
-        getattr(result, "file_results", []) or [],
-        key=lambda fr: getattr(fr, "deficit_score", 0.0),
-        reverse=True,
-    )
+    # Every analyzed language (language_registry), Python first.
+    file_results = sorted(all_file_results(result), key=_file_score, reverse=True)
     targets: List[Dict[str, Any]] = []
     for fr in file_results[:limit]:
         targets.append(
             {
                 "file_path": fr.file_path,
-                "priority_score": float(getattr(fr, "deficit_score", 0.0)),
-                "deficit_score": float(getattr(fr, "deficit_score", 0.0)),
-                "reasons": (
-                    ["high deficit"] if getattr(fr, "deficit_score", 0.0) >= SUSPICIOUS_AT else []
-                ),
+                "priority_score": _file_score(fr),
+                "deficit_score": _file_score(fr),
+                "reasons": (["high deficit"] if _file_score(fr) >= SUSPICIOUS_AT else []),
                 "coverage_ratio": None,
                 "churn_count": 0,
             }
@@ -84,22 +94,17 @@ def _top_targets(result, limit: int = 10) -> List[Dict[str, Any]]:
 
 def _find_findings(result, limit: int = 20) -> List[Dict[str, Any]]:
     findings: List[Dict[str, Any]] = []
-    for fr in sorted(
-        getattr(result, "file_results", []) or [],
-        key=lambda item: getattr(item, "deficit_score", 0.0),
-        reverse=True,
-    ):
-        if getattr(fr, "deficit_score", 0.0) < 30 and not getattr(fr, "pattern_issues", []):
+    for fr in sorted(all_file_results(result), key=_file_score, reverse=True):
+        if _file_score(fr) < 30 and not _file_issues(fr):
             continue
         findings.append(
             {
                 "file_path": fr.file_path,
                 "status": getattr(fr.status, "value", str(fr.status)),
-                "deficit_score": getattr(fr, "deficit_score", 0.0),
+                "deficit_score": _file_score(fr),
                 "introduced": False,
                 "issues": [
-                    getattr(issue, "pattern_id", str(issue))
-                    for issue in getattr(fr, "pattern_issues", [])[:10]
+                    getattr(issue, "pattern_id", str(issue)) for issue in _file_issues(fr)[:10]
                 ],
             }
         )
@@ -135,10 +140,9 @@ def build_audit_payload(
         _relative_project_path(p, project_path)
         for p in get_changed_files_func(project_path, base_ref)
     }
-    file_results = list(getattr(result, "file_results", []) or [])
     introduced = []
     inherited = []
-    for fr in file_results:
+    for fr in all_file_results(result):
         rel_path = _relative_project_path(fr.file_path, project_path)
         if rel_path in changed:
             introduced.append(rel_path)

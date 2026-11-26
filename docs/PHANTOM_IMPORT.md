@@ -8,7 +8,7 @@ provider of an import is found, and why, is in
 **Pattern ID:** `phantom_import`
 **Severity:** HIGH (at most; 3.18)
 **Axis:** QUALITY
-**Language:** Python only — JS/TS, Go and Rust have their own rules (see [PATTERNS.md](PATTERNS.md#javascript--typescript))
+**Language:** Python only — JS/TS, Go, Rust, Swift and Kotlin have their own rules (see [PATTERNS.md](PATTERNS.md#javascript--typescript))
 **Module:** `slop_detector.patterns.python_imports`
 
 ---

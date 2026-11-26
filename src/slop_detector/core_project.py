@@ -58,8 +58,6 @@ _UNSUPPORTED_SOURCE_EXTENSIONS = {
     ".ipynb",
     ".java",
     ".jl",
-    ".kt",
-    ".kts",
     ".lean",
     ".lua",
     ".mjs",
@@ -71,7 +69,6 @@ _UNSUPPORTED_SOURCE_EXTENSIONS = {
     ".sh",
     ".sol",
     ".svelte",
-    ".swift",
     ".vue",
     ".zig",
 }
@@ -285,13 +282,12 @@ def _canonical_order(project_path: Path, paths: List[Path]) -> List[Path]:
 
 def _is_default_exclusion(reason: str) -> bool:
     """A built-in exclusion: a default ignore pattern, a default-excluded
-    directory or a language adapter's own exclusion (Cargo's target/)."""
+    directory or a language adapter's own exclusion (Cargo's target/, an
+    Xcode test target)."""
     if reason.startswith("directory:"):
         return True
     pattern = reason[len("pattern:") :]
-    return pattern in Config.DEFAULT_CONFIG["ignore"] or any(
-        pattern in adapter.extra_ignore for adapter in registry.languages()
-    )
+    return pattern in Config.DEFAULT_CONFIG["ignore"] or pattern in registry.default_patterns()
 
 
 def collect_project_scan_coverage(project_path: Path, ignore_patterns: List[str]) -> Dict[str, Any]:
@@ -305,8 +301,8 @@ def collect_project_scan_coverage(project_path: Path, ignore_patterns: List[str]
             reason = item.ignore_reason(ignore_patterns)
             language = _supported_language(suffix)
             adapter = registry.spec_for_suffix(suffix)
-            if adapter is not None and adapter.extra_ignore and reason is None:
-                reason = item.ignore_reason(list(ignore_patterns) + list(adapter.extra_ignore))
+            if adapter is not None and reason is None:
+                reason = item.ignore_reason(registry.ignore_patterns(adapter, ignore_patterns))
             if language is not None and reason is not None:
                 excluded.append(
                     {

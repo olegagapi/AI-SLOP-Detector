@@ -33,8 +33,8 @@ projects scanned from one directory together.
 The schema migrates in place when columns are added; existing rows are never
 rewritten (pre-v6 rows keep `provenance_state = NULL` and count as legacy).
 
-Since 3.16.2 (schema v7) every analyzed file is recorded, Python, JS/TS, Go
-and Rust, and a metric column holds a value only when the metric was
+Since 3.16.2 (schema v7) every analyzed file is recorded, Python, JS/TS, Go,
+Rust, Swift and Kotlin, and a metric column holds a value only when the metric was
 measured: LDR, inflation and DDC are NULL for the other languages and for a
 Python file whose metric was skipped or that did not parse, and
 `unmeasured_metrics` says why. A database made before v7 is rebuilt once,
@@ -44,7 +44,7 @@ value is kept, and a failed rebuild leaves the table as it was.
 **Going back to an older release.** A release older than 3.16.2 ignores v7
 rows for calibration, but its `--show-history` fails on a row with a NULL
 metric and its `--history-trends` fails on a day where no row has an LDR
-value (only JS/TS, Go or Rust files, or Python files that did not parse);
+value (only JS/TS, Go, Rust, Swift or Kotlin files, or Python files that did not parse);
 both were run with 3.16.1. It still records new scans. So
 before the rebuild, the database is kept as it was, once:
 

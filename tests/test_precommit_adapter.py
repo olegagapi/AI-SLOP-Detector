@@ -110,3 +110,32 @@ def test_the_shipped_hook_runs_with_several_files(tmp_path):
     )
     assert "unrecognized arguments" not in result.stderr, result.stderr[-300:]
     assert result.returncode == 0, result.stderr[-300:]
+
+
+# pre-commit's file tags (the identify library) for each analyzed extension.
+_IDENTIFY_TAG = {
+    ".py": "python",
+    ".js": "javascript",
+    ".jsx": "jsx",
+    ".ts": "ts",
+    ".tsx": "tsx",
+    ".go": "go",
+    ".rs": "rust",
+    ".swift": "swift",
+    ".kt": "kotlin",
+    ".kts": "kotlin",
+}
+
+
+def test_every_shipped_hook_runs_for_every_analyzed_language():
+    """A hook filtered to Python never ran in an iOS or Android repository."""
+    import yaml
+
+    from slop_detector.language_registry import languages
+
+    extensions = {".py"} | {ext for item in languages() for ext in item.extensions}
+    assert extensions <= set(_IDENTIFY_TAG), extensions - set(_IDENTIFY_TAG)
+    tags = {_IDENTIFY_TAG[ext] for ext in extensions}
+    for hook in yaml.safe_load((REPO / ".pre-commit-hooks.yaml").read_text(encoding="utf-8")):
+        assert "types" not in hook, hook["id"]  # types is an AND filter: python only
+        assert set(hook["types_or"]) == tags, (hook["id"], tags ^ set(hook["types_or"]))

@@ -59,10 +59,13 @@ Examples:
     parser.add_argument("--json", action="store_true", help="Output JSON format")
     parser.add_argument(
         "--format",
-        choices=["json", "ai", "ai-md"],
+        choices=["json", "ai", "ai-md", "xcode", "github"],
         help=(
-            "Structured output: json (the full result), ai (the AI report, JSON Lines) or ai-md "
-            "(the same report as one Markdown work order for an agent)"
+            "Structured output: json (the full result), ai (the AI report, JSON Lines), ai-md "
+            "(the same report as one Markdown work order for an agent), xcode (one "
+            "'path:line:column: warning: message' line per finding, for an Xcode build phase "
+            "and other tools that read compiler output) or github (GitHub Actions annotations "
+            "on the pull request)"
         ),
     )
     parser.add_argument(
@@ -426,3 +429,4 @@ def _normalize_format_args(args) -> None:
     if getattr(args, "format", None) == "json":
         args.json = True
     args.ai = getattr(args, "format", None) in ("ai", "ai-md")
+    args.diagnostics = getattr(args, "format", None) in ("xcode", "github")

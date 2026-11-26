@@ -214,6 +214,10 @@ export interface ScanOutput {
   go_file_results: PolyglotFileOutput[];
   /** Rust results, one per .rs file. */
   rust_file_results: PolyglotFileOutput[];
+  /** Swift results, one per .swift file. */
+  swift_file_results: PolyglotFileOutput[];
+  /** Kotlin results, one per .kt or .kts file. */
+  kotlin_file_results: PolyglotFileOutput[];
 }
 
 export interface AuditAction {
